@@ -1,0 +1,45 @@
+{
+  "registry_version": "0.1.0",
+  "owner": {"name": "Choudhary, Abhishek", "affiliation": "AyeAI", "orcid": "0009-0002-0684-8320"},
+  "orgs": {
+    "project-ilm": "ILM ecosystem: language kernel, standards, ops, publishing tooling",
+    "hindawiai": "Hindawi Programming System / Romenagri lineage (2003-04 onward) + legacy archives",
+    "zistgah": "The habitat: substrate, co-development, domain replicas, ecosystem hub",
+    "obonac": "Personal pages: VGC methodology papers",
+    "ayeai": "AyeAI lineage (anusaaraka etc.)"
+  },
+  "repos": [
+    {"org":"project-ilm","repo":"ilm.codes","class":"core","status":"live","site":"https://ilm.codes/","notes":"126+ script tables, 68-language registry, REBUILD.md context discipline"},
+    {"org":"project-ilm","repo":"chakra","class":"core","status":"live","notes":"astronomical engine v1.4.1; VGC case study (6,590-check parity harness)"},
+    {"org":"project-ilm","repo":"ops","class":"core","status":"live","notes":"publish_paper.sh, patent_track.sh, workflow engines; fork->PR->merge governance"},
+    {"org":"project-ilm","repo":"misty-doi","class":"core","status":"live","doi":"10.5281/zenodo.20719388","notes":"PyPI v1.0.1; upstream target for mistyx (newversion + bib)"},
+    {"org":"project-ilm","repo":"romenagri","class":"core","status":"live","notes":"transliteration kernel lineage (GPL 2003)"},
+    {"org":"project-ilm","repo":"language-specs","class":"library","status":"live","notes":"keyword registries / standards corpus"},
+    {"org":"hindawiai","repo":"chintamani","class":"core","status":"live","notes":"active Romenagri C source"},
+    {"org":"hindawiai","repo":"hindawi-legacy","class":"archival","status":"live","notes":"reconstructed 2004-08 releases; dedupe-as-documentation"},
+    {"org":"hindawiai","repo":"hindawi2020","class":"archival","status":"live"},
+    {"org":"hindawiai","repo":"hindawi2021","class":"archival","status":"live"},
+    {"org":"hindawiai","repo":"hindawi-tx","class":"archival","status":"live"},
+    {"org":"hindawiai","repo":"hindawiai.github.io","class":"library","status":"live"},
+    {"org":"hindawiai","repo":"romenagri-ed","class":"core","status":"staged","notes":"Phase-1 anchor tarball built, not pushed"},
+    {"org":"hindawiai","repo":"ilm-holy-grail","class":"library","status":"staged"},
+    {"org":"hindawiai","repo":"ilm-langspec","class":"library","status":"staged","notes":"13,668-item corpus"},
+    {"org":"hindawiai","repo":"ilm-living-standards","class":"library","status":"staged"},
+    {"org":"zistgah","repo":"zistgah.github.io","class":"core","status":"live","site":"https://zistgah.org/","notes":"habitat landing pending push; disclosures/ move pending"},
+    {"org":"zistgah","repo":"zamin","class":"core","status":"live","site":"https://zistgah.org/zamin/","notes":"ternary-silicon monograph + WYSIWYG simulator"},
+    {"org":"zistgah","repo":"pratik_core_mvp","class":"core","status":"live","site":"https://zistgah.org/pratik_core_mvp/","notes":"C++/CUDA kernel, ALL CHECKS PASSED, 3D visualizer"},
+    {"org":"zistgah","repo":"aab","class":"core","status":"pending-push","site":"https://zistgah.org/aab/","notes":"paint-a-system co-development studio v0.2"},
+    {"org":"zistgah","repo":"fiza","class":"core","status":"pending-push","site":"https://zistgah.org/fiza/","notes":"environmental VGC replica, Sprint-0 scaffold"},
+    {"org":"zistgah","repo":"ztools","class":"core","status":"pending-push","notes":"zseed engine + mistyx extensions"},
+    {"org":"zistgah","repo":"governance","class":"core","status":"pending-push","notes":"THIS repo: master contract/context, registry, contribution gate"},
+    {"org":"obonac","repo":"obonac.github.io","class":"core","status":"live","site":"https://obonac.github.io/","notes":"vgc-methodology.html + vgc-health.html (+/vgc-health support files)"},
+    {"org":"ayeai","repo":"anusaaraka","class":"archival","status":"live"}
+  ],
+  "known_dois": [
+    {"doi":"10.5281/zenodo.21264248","what":"VGC methodology v1.0.0"},
+    {"doi":"10.5281/zenodo.21303400","what":"VGC-Health concept DOI"},
+    {"doi":"10.5281/zenodo.21303401","what":"VGC-Health v1.0.0"},
+    {"doi":"10.5281/zenodo.20719388","what":"misty-doi v1.0.1"}
+  ],
+  "note": "known_dois is a verified seed, not the full corpus. Run `mistyx bib` on an authenticated machine and merge records.json in — the registry and the bibliography share one source of truth."
+}

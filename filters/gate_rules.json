@@ -1,0 +1,20 @@
+{
+  "rules_version": "0.1.0",
+  "forbidden_credit_patterns": [
+    "co-founder", "co-author", "co-creator",
+    "in collaboration with", "jointly (developed|created|authored)"
+  ],
+  "forbidden_affiliations": [
+    "AyeAI Consulting", "Independent Researcher",
+    "IBM[^a-z].{0,30}affiliation", "affiliation.{0,30}(IBM|Hewlett|HP Inc)"
+  ],
+  "secret_patterns": [
+    "ZENODO_TOKEN=[A-Za-z0-9]{8,}", "ghp_[A-Za-z0-9]{20,}",
+    "github_pat_[A-Za-z0-9_]{20,}", "api[_-]?key\\s*[:=]\\s*['\"][A-Za-z0-9]{16,}"
+  ],
+  "irreversible_ops": [
+    "push .*--force", "gh repo delete", "actions/publish", "misty publish[^-]"
+  ],
+  "confirmation_guard": "read -r -p",
+  "note_G1": "Personal names that must never appear in public files belong in filters/forbidden.local.txt (git-ignored, maintained privately by the author) — putting them in THIS public rules file would itself violate the rule they enforce."
+}

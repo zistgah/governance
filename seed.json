@@ -1,0 +1,15 @@
+{
+  "name": "governance",
+  "repo": "zistgah/governance",
+  "site": "https://github.com/zistgah/governance",
+  "artifact": "CONTRACT.md",
+  "doi_placeholder": "",
+  "inject_into": [],
+  "push_files": ["CONTRACT.md","CONTEXT.md","AGENTS.md","REGISTRY.json","README.md",
+    "overlays/CLAUDE.md","overlays/GPT.md","overlays/MANIFEST.yaml",
+    "filters/contribution_gate.sh","filters/gate_rules.json","filters/.gitignore",
+    ".github/workflows/gate.yml",".github/PULL_REQUEST_TEMPLATE.md"],
+  "provenance_dir": "provenance",
+  "backlog": "README.md",
+  "pages": false
+}

@@ -1,0 +1,19 @@
+name: contribution-gate
+on:
+  pull_request:
+  push:
+    branches: [main]
+jobs:
+  gate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
+      - name: Run the contribution gate
+        run: |
+          pip install pyyaml --quiet
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            bash filters/contribution_gate.sh --diff "origin/${{ github.base_ref }}"
+          else
+            bash filters/contribution_gate.sh --all
+          fi

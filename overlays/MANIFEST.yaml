@@ -1,0 +1,6 @@
+# MANIFEST.yaml — template: declare the repo class (drives conformance expectations)
+repo: ORG/NAME
+class: core        # core | library | archival | out-of-scope
+contract: CONTRACT.md
+context: CONTEXT.md
+governance: zistgah/governance
