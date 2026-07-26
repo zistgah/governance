@@ -97,8 +97,22 @@ zops_repo(){
     zops_die "./$name exists and is not a git clone — move it aside first"
   else
     _z_b "CLONING $slug → ./$name"
-    git clone --quiet "${ZOPS_FORGE:-https://github.com}/${slug}.git" "$ZOPS_REPO" \
-      || zops_die "clone failed: $slug"
+    if git clone --quiet "${ZOPS_FORGE:-https://github.com}/${slug}.git" "$ZOPS_REPO" 2>/dev/null; then
+      :
+    else
+      # C12 — the remote does not exist yet. Do not die: a new repository is a
+      # normal thing to seed. Initialise locally and record that the remote must
+      # be created. Creating it is a public, irreversible act, so it happens in
+      # zops_push under the typed gate that already lives there.
+      _z_i "remote $slug not found — initialising a NEW local repo"
+      _z_i "the remote will be created at push time, under your typed assertion"
+      mkdir -p "$ZOPS_REPO"
+      git -C "$ZOPS_REPO" init --quiet
+      git -C "$ZOPS_REPO" symbolic-ref HEAD refs/heads/main 2>/dev/null || true
+      git -C "$ZOPS_REPO" remote add origin \
+        "${ZOPS_FORGE:-https://github.com}/${slug}.git" 2>/dev/null || true
+      ZOPS_REMOTE_ABSENT=1
+    fi
     ZOPS_BRANCH="$(git -C "$ZOPS_REPO" symbolic-ref --short HEAD 2>/dev/null || echo main)"
   fi
   cd "$ZOPS_REPO" || zops_die "cannot enter $ZOPS_REPO"
@@ -215,6 +229,18 @@ zops_reseal(){
 # ---------------------------------------------------------------- 10. push
 # The whole gated write as ONE call. Sealing is not separable from pushing.
 zops_push(){
+  # C12 — create the remote if zops_repo found it absent. This runs AFTER the
+  # typed gate inside this function has been satisfied, so the human assertion
+  # that authorises the push also authorises bringing the repository into being.
+  _z_create_remote_if_needed(){
+    [ "${ZOPS_REMOTE_ABSENT:-0}" = "1" ] || return 0
+    command -v gh >/dev/null 2>&1 || zops_die "remote absent and gh unavailable: create ${ZOPS_SLUG} first"
+    _z_b "CREATING ${ZOPS_SLUG} (public)"
+    gh repo create "$ZOPS_SLUG" --public >/dev/null 2>&1 \
+      || gh repo view "$ZOPS_SLUG" >/dev/null 2>&1 \
+      || zops_die "could not create ${ZOPS_SLUG}"
+    ZOPS_REMOTE_ABSENT=0
+  }
   local summary="$1" reason receipt head
   _z_b "GATE"
   reason="$(zops_gate PUSH)" || { _z_b "ABORTED — tree left verified in place, nothing pushed"; return 10; }
