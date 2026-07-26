@@ -79,7 +79,11 @@ zops_preflight(){
     fi
   done
 }
-zops_have(){ local v="ZOPS_HAS_${1//[^a-zA-Z0-9]/_}"; [ "${!v:-0}" = 1 ]; }
+zops_have(){
+  local v="ZOPS_HAS_${1//[^a-zA-Z0-9]/_}"
+  case "${!v:-}" in 1) return 0 ;; 0) return 1 ;; esac
+  command -v "$1" >/dev/null 2>&1
+}
 
 # ---------------------------------------------------------------- 3. repo
 # THE qedler BUG, fixed once and for all: clone if absent, reset if present.
