@@ -45,3 +45,101 @@ these._
 
 ---
 _Reconstruct faithfully. Critique with evidence, not tone. Maintain contract and context._
+
+---
+
+# Clauses 31–36
+
+_Added 28 July 2026. Each was asked for explicitly. The master governs; per-repo
+overlays may ADD to these and may never relax them._
+
+## C31 — Retrieval before assumption. **This is the first invariant.**
+
+Before any substantive work, an agent retrieves the public record of the author
+and the project it is working on, and works from what it finds rather than from
+what it assumes.
+
+**The search term is `Abhishek Choudhary AyeAI IBM Hindawi`.** The full term is
+mandatory: "Abhishek Choudhary" alone is a common name across South Asia and
+returns other people. An agent that reasons about this estate from a partial
+match is reasoning about a stranger.
+
+The same rule binds the estate itself: **discover, never hardcode.** An
+organisation list, a repository list, a registry — these are queried from the
+authoritative source with pagination, not written into a script as a constant. A
+hardcoded list is a snapshot that silently becomes a lie, and it reports a
+fraction of the estate as though it were the whole.
+
+_Earned: an inventory shipped with five organisations hardcoded into it and
+reported the result as the estate._
+
+## C32 — No vendor lock-in, on him or on any project
+
+No product, page, tool or workflow may become unusable, or lose a capability it
+advertises, because one supplier is removed.
+
+- Any AI capability goes through a **provider abstraction** with **at least one
+  self-hostable or keyless option**.
+- Where a user's own credential can be used, it is **the user's credential**
+  (bring-your-own-key). The estate does not intermediate a bill it need not carry.
+- A convenience that exists only inside one vendor's product may be *offered*, and
+  may never be the *only* path to a capability.
+- This is AAB's **AI-source invariance** made binding on the products, not only on
+  the method: the validity of a result does not depend on which intelligence
+  produced it, so neither may the availability of a feature.
+
+## C33 — Experience scales, and the scale is the user's
+
+Every surface is delivered along the full range — **shell console → 2D page →
+immersive VR/XR** — and the user's role selects the rung.
+
+- The role changes **what is shown**, never **what is computed**.
+- A clinician must never be shown an engineering tab, a build view, or a VR
+  station in order to reach clinical function. Complexity that serves the builder
+  is not to be paid for by the practitioner.
+- Roles recognised across the estate: practitioner · learner · teacher ·
+  researcher · engineer · institution · patient · visitor.
+- The rung and the role travel in the URL, so a surface is shareable in the state
+  the sender meant.
+
+## C34 — Certification and validation, in isolation and in integration
+
+Anything intended for a regulated use — an EMR as Software as a Medical Device is
+the standing example — must be demonstrable **twice**:
+
+1. **In isolation** — the component validated on its own, deliverable on its own,
+   with its own evidence. A tool that can only be certified as part of the whole
+   cannot be sold, licensed or audited separately.
+2. **In integration** — the same component validated in the assembled system,
+   because integration introduces behaviour that isolation cannot show.
+
+Both bodies of evidence are retained. Neither substitutes for the other. Claims of
+compliance are tested against **litigation and legal simulation** before they are
+made publicly.
+
+## C35 — Context travels with every surface
+
+Every page in every estate carries a machine-readable statement of what it is,
+what it holds, and under whose licence — sufficient for a person or an assistant
+arriving cold to work without asking.
+
+- A page that can seed a conversation must be able to **hand over its own
+  context**; seeding without context produces confident answers about nothing.
+- Intent capture is **exact**: what the contributor meant is recorded in their
+  words, never normalised into ours before it is stored.
+- Contribution is preferred through the forge (a pull request). Where that is too
+  much to ask, a simpler path is offered into the **same registry** — the route
+  differs, the record does not.
+
+## C36 — Routing is a preference, not a property
+
+No repository, issue or artifact names a specific AI vendor or model as its
+owner. Work carries **what it needs** — `needs:code`, `needs:proof`,
+`needs:ontology`, `needs:visual`, `needs:testing`, `needs:legal`, `needs:human` —
+and the human routes at the moment of dispatch.
+
+Quality is tracked against the **capability**, not the issue, so that preference
+is learned and survives a model changing without a single issue being edited.
+
+_Earned: issues were labelled `ai:chatgpt` and `ai:gemini`, freezing a routing
+decision into the repository where it goes stale._
