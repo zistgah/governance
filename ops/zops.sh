@@ -156,6 +156,7 @@ zops_check_copyright(){ grep -rqI '1993.\{0,3\}2026 Abhishek Choudhary' README.m
 # rules and this file itself — all of which exist to prohibit the term.
 zops_check_affiliation(){
   local hits
+  # gate-allow: G2-affiliation  (this line FORBIDS the term; it does not claim it)
   hits="$(grep -rlI 'Independent Researcher' --include='*.md' --include='*.json' --include='*.cff' . 2>/dev/null \
           | grep -v '^\./ops/zops\.sh$' \
           | grep -v '^\./CONTRACT\.md$' \

@@ -50,6 +50,30 @@ fi
 
 FAILS=0; WARNS=0
 fail(){ echo "  FAIL [$1] $2"; FAILS=$((FAILS+1)); }
+EXEMPT=0; EXEMPT_ANY=0
+# A rule has to be able to name the thing it forbids. Exempting a whole FILE by
+# name (the old behaviour) is too blunt and invisible; this exempts the LINE, for
+# the NAMED rule, and says so in the output.
+#   grep -q 'Independent Researcher' ...   # gate-allow: G2-affiliation
+# The pragma may sit on the matching line or the line immediately above it.
+gate_line_exempt(){
+  local file="$1" lineno="$2" rule="$3" ctx
+  ctx="$(sed -n "$((lineno>1?lineno-1:1)),${lineno}p" "$file" 2>/dev/null)"
+  case "$ctx" in
+    *"gate-allow: $rule"*|*"gate-allow:$rule"*) EXEMPT=$((EXEMPT+1)); return 0 ;;
+    *"gate-allow: *"*)                          EXEMPT_ANY=$((EXEMPT_ANY+1)); return 0 ;;
+  esac
+  return 1
+}
+# every matching line, minus the exempted ones
+gate_hits(){
+  local file="$1" pat="$2" rule="$3" n out=""
+  while IFS=: read -r n _; do
+    [ -n "$n" ] || continue
+    gate_line_exempt "$file" "$n" "$rule" || out="$out $n"
+  done < <(grep -niE "$pat" "$file" 2>/dev/null)
+  printf '%s' "${out# }"
+}
 warn(){ echo "  warn [$1] $2"; WARNS=$((WARNS+1)); }
 is_text(){ case "$1" in *.png|*.jpg|*.jpeg|*.gif|*.webp|*.pdf|*.gz|*.tgz|*.zip|*.ots|*.woff*|*.ico) return 1;; *) return 0;; esac; }
 
@@ -81,8 +105,9 @@ for f in "${FILES[@]}"; do
   # G1 forbidden credits (rules + private local list)
   if ! echo "$f" | grep -qE "contribution_gate|gate_rules|CONTRACT|AGENTS"; then
     for p in "${R_CREDITS[@]}"; do
-      if grep -qiE "$p" "$f" 2>/dev/null; then
-        fail "G1-credit" "$f: matches forbidden credit pattern ($p) at line $(grep -niE "$p" "$f" | head -1 | cut -d: -f1)"
+      hits="$(gate_hits "$f" "$p" G1-credit)"
+      if [ -n "$hits" ]; then
+        fail "G1-credit" "$f: forbidden credit pattern ($p) at line(s)$hits"
       fi
     done
   fi
@@ -95,8 +120,9 @@ for f in "${FILES[@]}"; do
 
   # G2 affiliation
   for p in "${R_AFFIL[@]}"; do
-    if grep -qiE "$p" "$f" 2>/dev/null && ! echo "$f" | grep -qE "contribution_gate|gate_rules|CONTRACT"; then
-      fail "G2-affiliation" "$f: matches forbidden affiliation pattern ($p)"; fi
+    hits="$(gate_hits "$f" "$p" G2-affiliation)"
+    if [ -n "$hits" ] && ! echo "$f" | grep -qE "contribution_gate|gate_rules|CONTRACT"; then
+      fail "G2-affiliation" "$f: forbidden affiliation pattern ($p) at line(s)$hits"; fi
   done
 
   # G3 /tmp in scripts (gate excludes itself — it must be able to name what it forbids)
@@ -107,8 +133,9 @@ for f in "${FILES[@]}"; do
 
   # G4 secrets
   for p in "${R_SECRETS[@]}"; do
-    if grep -qnE "$p" "$f" 2>/dev/null && ! echo "$f" | grep -qE "contribution_gate|gate_rules"; then
-      fail "G4-secret" "$f: matches secret pattern"; fi
+    hits="$(gate_hits "$f" "$p" G4-secret)"
+    if [ -n "$hits" ] && ! echo "$f" | grep -qE "contribution_gate|gate_rules"; then
+      fail "G4-secret" "$f: secret pattern at line(s)$hits"; fi
   done
 
   # G5 DOI verification (skip the registry itself)
@@ -143,9 +170,13 @@ done
 
 echo ""
 if [ "$FAILS" -gt 0 ]; then
-  echo "=== GATE: FAIL — $FAILS violation(s), $WARNS warning(s). Fix before merge. ==="
+  [ "$EXEMPT" -gt 0 ] && echo "  $EXEMPT line(s) exempted by an explicit gate-allow pragma"
+[ "$EXEMPT_ANY" -gt 0 ] && echo "  $EXEMPT_ANY line(s) exempted by a BLANKET gate-allow: * — review these"
+echo "=== GATE: FAIL — $FAILS violation(s), $WARNS warning(s). Fix before merge. ==="
   exit 1
 else
-  echo "=== GATE: PASS — 0 violations, $WARNS warning(s). ==="
+  [ "$EXEMPT" -gt 0 ] && echo "  $EXEMPT line(s) exempted by an explicit gate-allow pragma"
+[ "$EXEMPT_ANY" -gt 0 ] && echo "  $EXEMPT_ANY line(s) exempted by a BLANKET gate-allow: * — review these"
+echo "=== GATE: PASS — 0 violations, $WARNS warning(s). ==="
   exit 0
 fi
