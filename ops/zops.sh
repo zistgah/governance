@@ -97,6 +97,16 @@ zops_repo(){
     ZOPS_BRANCH="$(git -C "$ZOPS_REPO" symbolic-ref --short HEAD 2>/dev/null || echo main)"
     git -C "$ZOPS_REPO" reset --hard --quiet "origin/$ZOPS_BRANCH" 2>/dev/null || true
     git -C "$ZOPS_REPO" clean -qfd 2>/dev/null || true
+    # The remote may never have existed, or may have been deleted since this
+    # clone was made. C12 only set ZOPS_REMOTE_ABSENT on the CLONE path, so a
+    # second run reused the local repo, lost the flag, and pushed at nothing —
+    # after committing, stamping and sealing. Probe here so the create-at-push
+    # path stays reachable on every run, not only the first.
+    if ! git -C "$ZOPS_REPO" ls-remote --exit-code origin >/dev/null 2>&1; then
+      _z_i "remote $slug is not reachable — it will be created at push time"
+      ZOPS_REMOTE_ABSENT=1
+    fi
+    ZOPS_REMOTE_RECHECKED=1
   elif [ -e "$ZOPS_REPO" ]; then
     zops_die "./$name exists and is not a git clone — move it aside first"
   else
@@ -120,7 +130,11 @@ zops_repo(){
     ZOPS_BRANCH="$(git -C "$ZOPS_REPO" symbolic-ref --short HEAD 2>/dev/null || echo main)"
   fi
   cd "$ZOPS_REPO" || zops_die "cannot enter $ZOPS_REPO"
-  _z_i "at $(git rev-parse --short HEAD) on $ZOPS_BRANCH"
+  if git rev-parse --verify --quiet HEAD >/dev/null 2>&1; then
+    _z_i "at $(git rev-parse --short HEAD) on $ZOPS_BRANCH"
+  else
+    _z_i "no commits yet on $ZOPS_BRANCH — this is a new repository"
+  fi
 }
 
 # ---------------------------------------------------------------- 4. contract
