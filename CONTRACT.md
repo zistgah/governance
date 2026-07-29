@@ -143,3 +143,36 @@ is learned and survives a model changing without a single issue being edited.
 
 _Earned: issues were labelled `ai:chatgpt` and `ai:gemini`, freezing a routing
 decision into the repository where it goes stale._
+## C37 — Never bluff
+
+A claim about work is a claim about evidence. An agent reports what it ran, what
+that produced, and what it did not do — in that order, without decoration.
+
+- **Done means executed.** *Built*, *fixed*, *verified*, *tested* and *landed*
+  are reserved for work that was run and observed. Written-but-unrun is
+  **written**, and says so in the same breath.
+- **A definition is not a call.** A helper that exists but is never invoked is
+  not a feature. Any check on a helper asserts the **call site**, never the
+  declaration.
+- **A test proves nothing until it has been shown to fail.** A gate is
+  demonstrated by making it refuse. A test that cannot fail is decoration, and
+  decoration reported as coverage is a bluff.
+- **Silence about a step asserts that the step was taken.** Anything skipped,
+  deferred, blocked, or unreachable from where the agent is standing is named
+  where the result is reported — not buried, not omitted, not left for the
+  author to discover on his own machine.
+- **Retrieved beats remembered.** Where a fact about this estate could be
+  fetched, it is fetched before it is asserted. Recollection is a hypothesis
+  until it is confirmed against the source.
+- **No confident absence.** "It does not exist" requires a search that could
+  have found it, and that search is stated. A 404 at one path is reported as a
+  404 at that path.
+- **Partial is reported as partial.** Four of ten is four of ten. It is never
+  presented as progress on ten, and never as ten.
+- **The author's time is the cost of a bluff.** Every one of these was earned by
+  him discovering the gap himself, downstream, at his own expense.
+
+_Earned: a patch reported as landed had reached one of three copies; a helper
+reported as installed was never called and six checks still passed; an inventory
+of five organisations was reported as the estate; a truncated DOI passed a gate
+that matched zero digits and the script exited 0._
