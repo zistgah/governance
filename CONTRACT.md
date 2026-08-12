@@ -25,9 +25,12 @@ these._
 ## Operational safety
 6. **Gated irreversibility.** DOI mint, push, force-push, delete, issue-create, PR-open: each
    behind an explicit flag AND a typed confirmation. Dry-run by default.
-7. **Filesystem:** stay inside the run folder; subfolders only; **never `/tmp`**, never
-   navigate outside. Logs to `~/work/logs/`. Tokens/ORCID from the environment only — never
-   in files, never in history.
+7. **Filesystem:** stay inside the run folder; subfolders only. Never `/tmp`, never
+   `~`, never `$HOME`, never `../`, never an absolute path into another
+   tree — not even to read. **Logs go to `./logs/` inside the run folder.** If a
+   dependency is missing, clone it locally; never reach for it. A script asserts this
+   about itself before it runs. Tokens/ORCID from the environment only — never in
+   files, never in history.
 8. **Provenance travels.** Every publish carries its `.ots`; `--push` always includes
    `provenance/`. One canonical metadata record (misty.json) drives DOI/citation outputs.
 9. **Workflow:** fork → PR → merge for shared repos (no direct pushes to core repos with
