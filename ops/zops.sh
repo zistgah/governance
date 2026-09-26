@@ -29,7 +29,7 @@
 # © 1993–2026 Abhishek Choudhary. All rights reserved. AyeAI.
 # SPDX-License-Identifier: GPL-3.0-or-later
 
-ZOPS_VERSION="1.0.0"
+ZOPS_VERSION="1.1.0"
 [ -n "${ZOPS_SOURCED:-}" ] && return 0
 ZOPS_SOURCED=1
 
@@ -181,7 +181,7 @@ zops_diff(){
 zops_gate(){
   local want="$1" line word reason
   printf '   Type %s plus a reason ("%s fix", "%s, fix" and "%s: fix" all work).\n' "$want" "$want" "$want" "$want" >&2
-  printf '   > ' >&2; read -r line || true
+  read -r -p '   > ' line || true
   word="$(printf '%s' "$line" | awk '{print toupper($1)}' | tr -d ',:;.')"
   reason="$(printf '%s' "$line" | sed -E 's/^[[:space:]]*[A-Za-z]+[,:;.]?[[:space:]]*//' | sed -E 's/[[:space:]]+$//')"
   [ "$word" = "$want" ] || return 1
@@ -255,14 +255,19 @@ zops_push(){
     [ "${ZOPS_REMOTE_ABSENT:-0}" = "1" ] || return 0
     command -v gh >/dev/null 2>&1 || zops_die "remote absent and gh unavailable: create ${ZOPS_SLUG} first"
     _z_b "CREATING ${ZOPS_SLUG} (public)"
-    gh repo create "$ZOPS_SLUG" --public >/dev/null 2>&1 \
-      || gh repo view "$ZOPS_SLUG" >/dev/null 2>&1 \
-      || zops_die "could not create ${ZOPS_SLUG}"
+    local out
+    if ! out="$(gh repo create "$ZOPS_SLUG" --public 2>&1)"; then
+      gh repo view "$ZOPS_SLUG" >/dev/null 2>&1 || zops_die "could not create ${ZOPS_SLUG}: ${out}"
+    fi
+    gh repo view "$ZOPS_SLUG" >/dev/null 2>&1 || zops_die "${ZOPS_SLUG} does not exist after creation"
     ZOPS_REMOTE_ABSENT=0
   }
   local summary="$1" reason receipt head
   _z_b "GATE"
   reason="$(zops_gate PUSH)" || { _z_b "ABORTED — tree left verified in place, nothing pushed"; return 10; }
+  # 1.1.0: the helper above was defined and never called, so a new repository was pushed at
+  # nothing after being committed and sealed. The typed PUSH authorises its creation.
+  _z_create_remote_if_needed
 
   _z_b "COMMIT"
   git add -A
@@ -288,7 +293,104 @@ $reason
   fi
 
   _z_b "PUSH"; git push --quiet origin "$ZOPS_BRANCH"; _z_i "pushed $(git rev-parse --short HEAD)"
+  [ "$(git ls-remote origin "refs/heads/$ZOPS_BRANCH" | cut -f1)" = "$(git rev-parse HEAD)" ] \
+    || zops_die "origin/$ZOPS_BRANCH does not equal the local HEAD after the push"
   ZOPS_PUSHED="$(git rev-parse HEAD)"
+}
+
+# ---------------------------------------------------------------- 10b. pages (1.1.0)
+# GitHub Pages from a branch path. POST creates a site and PUT only updates one, so both are
+# tried; when neither takes, the reason is printed and nothing is claimed.
+zops_pages(){
+  local path="${1:-/docs}" out
+  _z_b "PAGES"
+  zops_have gh || { _z_i "gh absent: Pages not enabled, nothing claimed"; return 3; }
+  if out="$(gh api -X POST "repos/$ZOPS_SLUG/pages" -f "source[branch]=$ZOPS_BRANCH" -f "source[path]=$path" 2>&1)"; then
+    _z_ok "Pages created from $ZOPS_BRANCH:$path"
+  elif out="$(gh api -X PUT "repos/$ZOPS_SLUG/pages" -f "source[branch]=$ZOPS_BRANCH" -f "source[path]=$path" 2>&1)"; then
+    _z_ok "Pages set to $ZOPS_BRANCH:$path"
+  else
+    _z_no "Pages not enabled: $(printf '%s' "$out" | tail -1); the token may lack the pages scope"
+    return 1
+  fi
+}
+
+# ---------------------------------------------------------------- 10c. mint (1.1.0)
+# Mints the pushed HEAD through misty. misty's interface is read at run time, the dry run must
+# be clean, and the typed MINT is the author's verification. The DOI is read from misty's own
+# result file, never from a log; it is recorded back, receipted, resealed and pushed as part of
+# the same gated act. A repository that already carries a DOI is never minted as a new record.
+zops_mint(){
+  local meta="${1:-misty.json}" dir help version doi reason head receipt arc pkg=()
+  _z_b "MINT"
+  if [ -f CITATION.cff ] && grep -q '^doi:' CITATION.cff; then
+    _z_i "already minted as $(sed -n 's/^doi:[[:space:]]*//p' CITATION.cff); a further release is a new version beneath its concept DOI, not a new record"
+    return 0
+  fi
+  zops_have misty || { _z_i "misty absent: nothing minted, no DOI claimed"; return 3; }
+  [ -n "${ZENODO_TOKEN:-}" ] || { _z_i "ZENODO_TOKEN is not in the environment: nothing minted"; return 3; }
+  [ -f "$meta" ] || zops_die "no $meta: one canonical metadata record drives the DOI"
+  [ -z "$(git status --porcelain)" ] || zops_die "the working tree is dirty; a DOI names a commit"
+  git fetch --quiet origin "$ZOPS_BRANCH" || zops_die "cannot reach origin to confirm the push"
+  [ "$(git rev-parse HEAD)" = "$(git rev-parse "origin/$ZOPS_BRANCH")" ] \
+    || zops_die "HEAD is not on origin/$ZOPS_BRANCH; a DOI naming an unpushed commit points at nothing"
+  zops_check_manifest || zops_die "the manifest does not verify; a broken seal is not deposited"
+  help="$(misty publish --help 2>&1 || true)"
+  grep -Eq -- '(^|[[:space:],\[])(-f|--files)([[:space:],]|$)' <<<"$help" \
+    || zops_die "this misty's publish takes no -f/--files; its --help was read, not recalled"
+  if grep -q -- '--no-package' <<<"$help"; then pkg=(--no-package); fi
+  version="$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["version"])' "$meta")" \
+    || zops_die "$meta carries no version"
+  dir="$ZOPS_HOME/.zops-mint/${ZOPS_SLUG//\//_}"; mkdir -p "$dir"
+  arc="$dir/${ZOPS_SLUG##*/}-${version}.tar.gz"
+  git archive --format=tar.gz --prefix="${ZOPS_SLUG##*/}-${version}/" -o "$arc" HEAD
+  local files=("$arc"); [ -f CITATION.cff ] && files+=("$PWD/CITATION.cff")
+  _z_i "deposit: ${arc#"$ZOPS_HOME"/}$([ -f CITATION.cff ] && echo ' and CITATION.cff'), from $(git rev-parse --short HEAD)"
+  misty publish -m "$meta" -f "${files[@]}" "${pkg[@]}" --dry-run --output "$dir/dry-run.json" >>"$ZOPS_LOG" 2>&1 \
+    || zops_die "the dry run is not clean, so nothing is minted; see ${ZOPS_LOG#"$ZOPS_HOME"/}"
+  _z_ok "dry run clean"
+  _z_i "A DOI is a dated public disclosure. This creates a new record and a new concept DOI;"
+  _z_i "if one already exists for $ZOPS_SLUG, decline here and mint a version beneath it instead."
+  reason="$(zops_gate MINT)" || { _z_b "MINT declined; pushed and sealed without a DOI is finished work"; return 10; }
+  misty publish -m "$meta" -f "${files[@]}" "${pkg[@]}" --output "$dir/mint.json" >>"$ZOPS_LOG" 2>&1 \
+    || zops_die "misty publish failed; nothing recorded back; see ${ZOPS_LOG#"$ZOPS_HOME"/}"
+  doi="$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1])).get("doi") or "")' "$dir/mint.json" 2>/dev/null || true)"
+  [[ "$doi" =~ ^10\.5281/zenodo\.[0-9]{6,}$ ]] \
+    || zops_die "misty reported success and no DOI; nothing recorded back and nothing invented" 3
+  _z_ok "minted $doi"
+  ZOPS_DOI="$doi"
+  python3 - "$doi" <<'PY'
+import os, re, sys
+doi = sys.argv[1]
+if os.path.exists("CITATION.cff"):
+    s = open("CITATION.cff", encoding="utf-8").read()
+    s = s.replace("\nversion:", "\ndoi: " + doi + "\nversion:", 1) if "\nversion:" in s else s + "doi: " + doi + "\n"
+    open("CITATION.cff", "w", encoding="utf-8").write(s)
+if os.path.exists("README.md"):
+    s = open("README.md", encoding="utf-8").read()
+    head, _, rest = s.partition("\n")
+    open("README.md", "w", encoding="utf-8").write(head + "\n\nDOI: [" + doi + "](https://doi.org/" + doi + ")\n" + rest)
+PY
+  git add -A
+  git -c user.name="$ZOPS_NAME" -c user.email="$ZOPS_EMAIL" commit --quiet -m "doi: record $doi
+
+$reason
+
+(c) 1993-2026 Abhishek Choudhary. All rights reserved. AyeAI."
+  head="$(git rev-parse HEAD)"
+  _z_b "RECEIPT"; receipt="$(zops_receipt MINT "$head" "$reason" "$doi")"; _z_i "$receipt"
+  zops_stamp "$receipt"
+  _z_b "RESEAL"; zops_reseal; zops_stamp MANIFEST.sha256
+  git add -A
+  git -c user.name="$ZOPS_NAME" -c user.email="$ZOPS_EMAIL" \
+      commit --quiet -m "attest: DOI record-back [Candor $(git rev-parse --short "$head")]"
+  if [ -f ops/verify.sh ]; then
+    bash ops/verify.sh >>"$ZOPS_LOG" 2>&1 || zops_die "the contract fails after the record-back; NOT pushed"
+  fi
+  git push --quiet origin "$ZOPS_BRANCH"
+  [ "$(git ls-remote origin "refs/heads/$ZOPS_BRANCH" | cut -f1)" = "$(git rev-parse HEAD)" ] \
+    || zops_die "origin/$ZOPS_BRANCH does not equal the local HEAD after the record-back push"
+  _z_ok "recorded back, resealed and pushed at $(git rev-parse --short HEAD)"
 }
 
 # ---------------------------------------------------------------- 11. mark

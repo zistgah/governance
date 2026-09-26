@@ -55,3 +55,16 @@ Standard checks: `zops_check_copyright`, `zops_check_affiliation`,
 MARK and puts an annotated `return-to/<UTC>` tag on the HEAD of each. Tags are
 additive — no branch moves, no history rewritten, nothing minted.
 Retrace with `git checkout return-to/<UTC>`.
+
+## 1.1.0
+
+- `zops_gate` reads with `read -r -p`, the form `filters/contribution_gate.sh` recognises as a typed
+  confirmation (G6), so a library that mints passes the ecosystem's own gate.
+- `zops_push` now calls `_z_create_remote_if_needed` after the typed gate. It was defined and never
+  called, so a new repository was committed and sealed and then pushed at nothing.
+- The push is a postcondition: `origin/<branch>` must equal the local HEAD afterwards.
+- `zops_pages [path]`: POST creates a Pages site, PUT only updates one; both are tried.
+- `zops_mint [misty.json]`: reads `misty publish --help`, archives HEAD with `git archive`, runs a
+  dry run, gates on a typed MINT, reads the DOI from misty's result file, records it back into
+  README.md and CITATION.cff, receipts, reseals and pushes. A repository that already carries a DOI
+  is never minted as a new record.
