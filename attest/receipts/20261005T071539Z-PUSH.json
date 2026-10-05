@@ -1,0 +1,18 @@
+{
+    "_type": "https://in-toto.io/Statement/v1",
+    "predicateType": "https://project-ilm.org/attestations/candor/v1",
+    "subject": [
+        {
+            "name": "zistgah/governance",
+            "digest": {
+                "gitCommit": "bdfe39f044286a6b9a74d16f128ce90dd8fb47f5"
+            }
+        }
+    ],
+    "predicate": {
+        "action": "PUSH",
+        "reason": "updates",
+        "utc": "20261005T071539Z",
+        "host": "ilm01-lin"
+    }
+}
