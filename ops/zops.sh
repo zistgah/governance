@@ -29,7 +29,7 @@
 # © 1993–2026 Abhishek Choudhary. All rights reserved. AyeAI.
 # SPDX-License-Identifier: GPL-3.0-or-later
 
-ZOPS_VERSION="1.1.0"
+ZOPS_VERSION="1.2.0"
 [ -n "${ZOPS_SOURCED:-}" ] && return 0
 ZOPS_SOURCED=1
 
@@ -323,9 +323,9 @@ zops_pages(){
 zops_mint(){
   local meta="${1:-misty.json}" dir help version doi reason head receipt arc pkg=()
   _z_b "MINT"
+  local prev=""
   if [ -f CITATION.cff ] && grep -q '^doi:' CITATION.cff; then
-    _z_i "already minted as $(sed -n 's/^doi:[[:space:]]*//p' CITATION.cff); a further release is a new version beneath its concept DOI, not a new record"
-    return 0
+    prev="$(sed -n 's/^doi:[[:space:]]*//p' CITATION.cff | tr -d '"' | head -1)"
   fi
   zops_have misty || { _z_i "misty absent: nothing minted, no DOI claimed"; return 3; }
   [ -n "${ZENODO_TOKEN:-}" ] || { _z_i "ZENODO_TOKEN is not in the environment: nothing minted"; return 3; }
@@ -335,6 +335,7 @@ zops_mint(){
   [ "$(git rev-parse HEAD)" = "$(git rev-parse "origin/$ZOPS_BRANCH")" ] \
     || zops_die "HEAD is not on origin/$ZOPS_BRANCH; a DOI naming an unpushed commit points at nothing"
   zops_check_manifest || zops_die "the manifest does not verify; a broken seal is not deposited"
+  if [ -n "$prev" ]; then _z_mint_version "$meta" "$prev"; return $?; fi
   help="$(misty publish --help 2>&1 || true)"
   grep -Eq -- '(^|[[:space:],\[])(-f|--files)([[:space:],]|$)' <<<"$help" \
     || zops_die "this misty's publish takes no -f/--files; its --help was read, not recalled"
@@ -359,20 +360,35 @@ zops_mint(){
     || zops_die "misty reported success and no DOI; nothing recorded back and nothing invented" 3
   _z_ok "minted $doi"
   ZOPS_DOI="$doi"
+  _z_record_back "$doi" "doi: record $doi" "$reason"
+}
+
+# The record-back both mint paths share: the DOI into CITATION.cff and README.md, a receipt
+# stamped, the seal rebuilt, the contract re-run, and the push proved.
+_z_record_back(){
+  local doi="$1" msg="$2" reason="$3" head receipt
   python3 - "$doi" <<'PY'
 import os, re, sys
 doi = sys.argv[1]
 if os.path.exists("CITATION.cff"):
     s = open("CITATION.cff", encoding="utf-8").read()
-    s = s.replace("\nversion:", "\ndoi: " + doi + "\nversion:", 1) if "\nversion:" in s else s + "doi: " + doi + "\n"
+    if re.search(r"(?m)^doi:", s):
+        s = re.sub(r"(?m)^doi:.*$", "doi: " + doi, s, count=1)
+    else:
+        s = s.replace("\nversion:", "\ndoi: " + doi + "\nversion:", 1) if "\nversion:" in s else s + "doi: " + doi + "\n"
     open("CITATION.cff", "w", encoding="utf-8").write(s)
 if os.path.exists("README.md"):
     s = open("README.md", encoding="utf-8").read()
-    head, _, rest = s.partition("\n")
-    open("README.md", "w", encoding="utf-8").write(head + "\n\nDOI: [" + doi + "](https://doi.org/" + doi + ")\n" + rest)
+    line = "DOI: [" + doi + "](https://doi.org/" + doi + ")"
+    if re.search(r"(?m)^DOI: \[10\.5281/zenodo\.\d+\]\(https://doi\.org/10\.5281/zenodo\.\d+\)$", s):
+        s = re.sub(r"(?m)^DOI: \[10\.5281/zenodo\.\d+\]\(https://doi\.org/10\.5281/zenodo\.\d+\)$", line, s, count=1)
+    else:
+        head, _, rest = s.partition("\n")
+        s = head + "\n\n" + line + "\n" + rest
+    open("README.md", "w", encoding="utf-8").write(s)
 PY
   git add -A
-  git -c user.name="$ZOPS_NAME" -c user.email="$ZOPS_EMAIL" commit --quiet -m "doi: record $doi
+  git -c user.name="$ZOPS_NAME" -c user.email="$ZOPS_EMAIL" commit --quiet -m "$msg
 
 $reason
 
@@ -391,6 +407,54 @@ $reason
   [ "$(git ls-remote origin "refs/heads/$ZOPS_BRANCH" | cut -f1)" = "$(git rev-parse HEAD)" ] \
     || zops_die "origin/$ZOPS_BRANCH does not equal the local HEAD after the record-back push"
   _z_ok "recorded back, resealed and pushed at $(git rev-parse --short HEAD)"
+}
+
+# 1.2.0: a repository that already carries a DOI gets a NEW VERSION beneath that DOI's concept,
+# through misty newversion, never a second record. The typed MINT is the author's
+# verification and is written into the metadata the guard reads; the dry run before it shows
+# every guard finding without letting the missing verification block the look.
+_z_mint_version(){
+  local meta="$1" prev="$2" help version dir arc dry res doi concept prevv reason head receipt
+  help="$(misty newversion --help 2>&1 || true)"
+  grep -q -- '--concept' <<<"$help" \
+    || { _z_i "this misty cannot add a version beneath $prev: its newversion has no --concept (misty-doi 1.2.0 has); nothing minted"; return 3; }
+  version="$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["version"])' "$meta")" \
+    || zops_die "$meta carries no version"
+  dir="$ZOPS_HOME/.zops-mint/${ZOPS_SLUG//\//_}"; mkdir -p "$dir"
+  arc="$dir/${ZOPS_SLUG##*/}-${version}.tar.gz"
+  git archive --format=tar.gz --prefix="${ZOPS_SLUG##*/}-${version}/" -o "$arc" HEAD
+  local files=("$arc"); [ -f CITATION.cff ] && files+=("$PWD/CITATION.cff")
+  _z_i "deposit: ${arc#"$ZOPS_HOME"/}$([ -f CITATION.cff ] && echo ' and CITATION.cff'), from $(git rev-parse --short HEAD)"
+  dry="$dir/dry-run.json"; rm -f "$dry"
+  if ! misty newversion -c "$prev" -m "$meta" -f "${files[@]}" --dry-run --allow-findings --output "$dry" >>"$ZOPS_LOG" 2>&1; then
+    if tail -3 "$ZOPS_LOG" | grep -q "is already the latest version's"; then
+      _z_i "version $version is already minted beneath this concept ($prev); nothing to mint"; return 0
+    fi
+    tail -4 "$ZOPS_LOG" | sed 's/^/   /'
+    zops_die "the version dry run is not clean, so nothing is minted; see ${ZOPS_LOG#"$ZOPS_HOME"/}"
+  fi
+  read -r concept prevv <<<"$(python3 -c 'import json,sys; d=json.load(open(sys.argv[1])); print(d.get("concept_doi") or "?", d.get("previous_version") or "unrecorded")' "$dry")"
+  _z_ok "dry run clean: version $version beneath concept $concept, after $prev (version $prevv)"
+  _z_i "the guard reports this deposit as not yet author-verified: that is expected before the gate,"
+  _z_i "because typing MINT is the verification, and it is written into the metadata the guard then reads"
+  _z_i "A DOI is a dated public disclosure. Typing MINT also records that you read the metadata."
+  reason="$(zops_gate MINT)" || { _z_b "MINT declined; pushed and sealed without a new DOI is finished work"; return 10; }
+  python3 - "$meta" "$dir/misty.gated.json" "$ZOPS_UTC" "$reason" <<'PY'
+import json, sys
+m = json.load(open(sys.argv[1], encoding="utf-8"))
+m["author_verified"] = True
+m["author_verified_by"] = f"typed MINT gate {sys.argv[3]}: {sys.argv[4]}"
+json.dump(m, open(sys.argv[2], "w", encoding="utf-8"), indent=1, ensure_ascii=False)
+PY
+  res="$dir/mint.json"; rm -f "$res"
+  misty newversion -c "$prev" -m "$dir/misty.gated.json" -f "${files[@]}" --output "$res" >>"$ZOPS_LOG" 2>&1 \
+    || { tail -6 "$ZOPS_LOG" | sed 's/^/   /'; zops_die "misty newversion failed; nothing recorded back; see ${ZOPS_LOG#"$ZOPS_HOME"/}"; }
+  doi="$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1])).get("doi") or "")' "$res" 2>/dev/null || true)"
+  [[ "$doi" =~ ^10\.5281/zenodo\.[0-9]{3,}$ ]] && [ "$doi" != "$prev" ] \
+    || zops_die "misty reported success and no new version DOI; nothing recorded back and nothing invented" 3
+  _z_ok "minted version $doi beneath concept $concept"
+  ZOPS_DOI="$doi"
+  _z_record_back "$doi" "doi: record $doi (version $version beneath $concept)" "$reason"
 }
 
 # ---------------------------------------------------------------- 11. mark
