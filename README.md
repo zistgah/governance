@@ -21,3 +21,11 @@ Standing instruction for any session: **"maintain contract and context."**
 - [ ] **gov#3 registry autofill** — merge `mistyx bib` records.json into REGISTRY.json known_dois.
 
 © 1993–2026 Abhishek Choudhary · AyeAI · GPL-3.0-or-later (code) · CC-BY-SA-4.0 (docs).
+
+<!-- trademarks:begin -->
+---
+AyeAI®, AyeCNSe® and AyeAM® are registered trademarks of Abhishek Choudhary in India, used and claimed worldwide since
+2019. The names of his products and projects are his trademarks; see [legal/TRADEMARKS.md](legal/TRADEMARKS.md). Code
+licences in this repository grant copyright permissions only and no right in any mark.
+© 1993–2026 Abhishek Choudhary. All rights reserved. AyeAI.
+<!-- trademarks:end -->
