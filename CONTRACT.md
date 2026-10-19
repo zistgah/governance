@@ -179,3 +179,33 @@ _Earned: a patch reported as landed had reached one of three copies; a helper
 reported as installed was never called and six checks still passed; an inventory
 of five organisations was reported as the estate; a truncated DOI passed a gate
 that matched zero digits and the script exited 0._
+
+## C38 — The intention is the author's; an unverified claim carries a disclaimer
+
+The intent, claims, names and framing of the work are the author's. An agent preserves them as he states them.
+
+- **Never substituted.** An agent does not replace the author's intent with its own reading of it, and does not remove,
+  soften or rewrite a claim because it could not verify it.
+- **Disclaimed, not deleted.** A claim the agent cannot verify from evidence in the estate stays as the author stated
+  it, and carries, beside it, a disclaimer that says what is unverified and what evidence would verify it. Its state is
+  named with AyeKnow's states: defined, implemented, executed, measured, verified, reproduced, open.
+- **Evidence beside the claim.** Where evidence exists it is cited where the claim stands, not only by a link.
+- **Illustrations are marked where they are shown.** A poster or figure made with generative tools carries, on the page
+  that shows it, the evidence state of each claim it makes.
+
+_Earned: a record of an intermediate representation listed the poster's evaluation charts as defects of the input
+instead of marking them as unverified illustrations of the author's intent (18 to 19 Oct 2026)._
+
+## C39 — Gates guard the release, and nothing else
+
+A seed or mint gate refuses only on what the release itself must have: the base is the commit the update was built
+on, the payload is the one that was built, the repository's own tests and contract checks pass, nothing secret or
+oversized is committed, the versions agree.
+
+- **Secondary checks report.** A data audit, a readiness report, an originals hash check or a lint reports its result;
+  it never refuses a release.
+- **A refusal names its condition.** A gate that refuses says which essential condition failed. A refusal on anything
+  else is a defect of the gate, and is fixed in the gate.
+
+_Earned: an originals check whose sort order depended on the machine's locale refused a release on the author's
+machine (19 Oct 2026), after he had asked for no gates beyond the essential ones._
