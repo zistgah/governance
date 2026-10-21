@@ -209,3 +209,42 @@ oversized is committed, the versions agree.
 
 _Earned: an originals check whose sort order depended on the machine's locale refused a release on the author's
 machine (19 Oct 2026), after he had asked for no gates beyond the essential ones._
+
+## C40: The rigour of a critical system
+
+Every tool and release in the estate is held to the standard of a medical device or an aerospace system, without giving up
+performance.
+
+- **Nothing ships unverified.** The tests, end to end included, pass before any push, release or DOI.
+- **No silent failure.** Every failure is recorded with its cause and shown; a fallback is announced when it is taken; one
+  part failing never hides the others.
+- **Inputs are validated before use**, and a fault names where it is. **State is written atomically**, one run holds a work
+  folder at a time, and a rerun carries on from where it stopped.
+- **Every irreversible step is checked afterwards**: what was pushed is read back from the remote and must match.
+- **Every step has a time limit and a resource check** (disk, memory) before it starts. Inputs are pinned and recorded, so
+  a result can be reproduced.
+- **Performance is kept**: work runs in parallel within limits the operator sets, and nothing is done twice.
+
+## C41: Nothing is installed on the host
+
+Tools are installed inside containers, which are made once and kept, not deleted after each run. A host is never modified
+to make a tool work, and nothing asks for sudo on it.
+
+## C42: One consent per run, and everything visible
+
+The author's intention is asked for once, covering the whole run, never step by step. Every command is shown as it runs and
+its output is visible; nothing is hidden by sending it to /dev/null.
+
+## C43: One source of truth
+
+Every surface (sites, notebooks, language pages, packages) is generated from the canonical repository and edited nowhere
+else. Each language lives on its own branch of an ingested repository; a change accepted on one language's branch is carried
+to every other language's branch and, after the quality checks, offered upstream, so that all branches keep one baseline.
+
+## C44: Polish is part of correctness
+
+Every slip will be read as a sign that work outside English is lesser. Presentation, wording, cultural appropriateness and
+the completeness of what a reader sees are held to the same standard as the code, and are checked before release.
+
+_Earned: 21 Oct 2026, when tools were delivered half-tested and pages showed English names in programs meant to be wholly in
+a language._
