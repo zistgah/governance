@@ -248,3 +248,44 @@ the completeness of what a reader sees are held to the same standard as the code
 
 _Earned: 21 Oct 2026, when tools were delivered half-tested and pages showed English names in programs meant to be wholly in
 a language._
+
+## C45: Every tool carries its notices
+
+Every tool's `--version` and `--help`, every README and every page carries the copyright line (© 1993–2026 Abhishek
+Choudhary. All rights reserved. AyeAI.), the licence, the trademarks it uses, and where to find its citation and DOI. A
+release that omits them is incomplete.
+
+_Earned: 21 Oct 2026, when paras's --version printed only its version._
+
+## C46: Every report says what to do
+
+A report never gives a bare number. Each measure is explained in plain words where it is shown, and each gap is paired with
+what to do about it and the exact file, table or issue where it is done, most important first.
+
+_Earned: 21 Oct 2026, when paras's report named collisions without saying what they were or what to do._
+
+## C47: Division of labour
+
+Each tool does one thing, and no tool takes over another's work or is reshaped to suit another.
+- **Hindawi** (hindawiai/hindawi2026.10) is the canon: the language tables, the compilers and the standards are defined
+  there and nowhere else; every other tool takes them from it.
+- **BURP** does ingestion: a file, a project and its build system, into a language and back, byte for byte, saying what is
+  still missing. It is a tool of its own (burp-ilm) and the same BURP travels inside paras.
+- **paras** is the philosopher's stone: it takes any free software, has BURP ingest it into every language, keeps only what
+  comes back exactly, publishes it, verifies every push and says what to do next. Its design is not changed to suit
+  another tool. It is installed and run with pipx; nobody is asked to clone it to run it.
+- **satsneha** keeps provenance and assurance evidence. For now it only reports: no gate refuses on its verdicts until
+  Abhishek Choudhary rules otherwise.
+- Material received from another AI is recorded as given, marked as such, and changes the canon only by his ruling.
+
+_Earned: 22 Oct 2026, when a misread complaint led to paras being reshaped around BURP._
+
+## C48: Clean before reading
+
+Every received document (a paste, an upload, a page, a file from another AI) is cleaned of invisible characters before it
+is read or used: zero-width spaces and joiners outside the scripts that spell with them, byte-order marks, soft hyphens,
+bidirectional embeddings, overrides and isolates, tag characters and control characters. What was removed is reported with
+its first position; the joiners a script needs for its spelling (Arabic script, the Indic scripts, Sinhala) are kept and
+counted. A file whose name misstates its type is read as what it is.
+
+_Earned: 22 Oct 2026, with the enhancement sample to the standards (a Word document named as text)._
