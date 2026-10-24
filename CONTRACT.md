@@ -289,3 +289,24 @@ its first position; the joiners a script needs for its spelling (Arabic script, 
 counted. A file whose name misstates its type is read as what it is.
 
 _Earned: 22 Oct 2026, with the enhancement sample to the standards (a Word document named as text)._
+
+## C49: Context collapse: the whole conversation, retrieved
+
+Compaction destroys an AI's context. When a conversation has been compacted (its summary says so and a transcript of the
+earlier conversation exists), the AI goes through the entire conversation in the transcript before acting on anything the
+request touches, and works from what it retrieves there, never from the summary alone. What it cannot retrieve, it says it
+cannot, and asks. Before it writes a seed, update, mint or release script, it retrieves the live state of every repository
+and record the script will touch (history, last commit, DOI, what is already published), so no script gates on an older
+seed or a state that has moved on. Memory notes and summaries are pointers to the record, not the record.
+
+_Earned: 23 and 24 Oct 2026, when, after repeated compaction, a seeder refused because the repository already held the
+first seed, a mint script was written for a record already minted, and a notebook went out that did not run._
+
+## C50: Work done under his direction is his
+
+Work an AI does under Abhishek Choudhary's direction is his: his intention, his algorithm, his copyright. Nothing
+published (a repository, a notebook, a package, a page, a deposit's metadata or a tool's notices) names the AI that wrote
+it; which AI worked on what is for the AI to know, recorded only where he asks. This refines C47's record of received
+material and relaxes nothing.
+
+_Earned: 24 Oct 2026, when chandah's notebook and notices named the AI that wrote its first version._
